@@ -41,25 +41,32 @@ class PID:
 class Lab1(Slide):
     def construct(self):
         # title slide
-        title = Text("F1tenth Lab 1:", font_size=100).shift(1 * UP)
-        title2 = Text("Wall Following")
+        title = TexText("F1tenth Lab 1:", font_size=100).shift(1 * UP)
+        title2 = TexText("Wall Following")
 
         self.play(Write(title))
         self.play(Write(title2))
         self.play(FadeOut(title), FadeOut(title2))
 
         # Outline
-        outline_title = Text("Outline:", font_size=100).shift(UP * 2)
-        outline = Text(
-            "1. What is PID?\n2. Implementing PID\n3. Tuning PID\n4.Geometric analysis of wall following\n5. Wall following!",
-            line_spacing_height=1.5,
-        ).shift(DOWN)
+        outline_title = TexText("Outline:", font_size=100).shift(UP * 2)
+        outline_1 = TexText("1. What is PID?")
+        outline_2 = TexText("2. Implementing PID")
+        outline_3 = TexText("3. Tuning PID")
+        outline_4 = TexText("4. Geometric analysis of wall following")
+        outline_5 = TexText("5. Wall following!")
+
+        outline = (
+            VGroup(outline_1, outline_2, outline_3, outline_4, outline_5)
+            .arrange(DOWN, aligned_edge=LEFT)
+            .shift(DOWN)
+        )
         self.play(Write(outline_title))
         self.play(Write(outline))
         self.play(FadeOut(outline_title), FadeOut(outline))
 
         # What is PID?
-        what_is_pid_title = Text("What is PID?")
+        what_is_pid_title = TexText("What is PID?")
         self.play(Write(what_is_pid_title))
 
         line_start = [-5, 0, 0]
@@ -149,7 +156,7 @@ class Lab1(Slide):
         self.play(FadeOut(error_eq))
 
         # go back to look at animation with plots for error and steering
-        what_is_pid_title = Text("Another look at pid")
+        what_is_pid_title = TexText("Another look at pid")
         self.play(Write(what_is_pid_title))
 
         line_start = [-5, -3, 0]
@@ -176,12 +183,12 @@ class Lab1(Slide):
         )
 
         error_legend = Line([0, 0, 0], [0.5, 0, 0], color=RED, stroke_width=2)
-        error_label = Text("Error", font_size=20, color=RED).next_to(
+        error_label = TexText("Error", font_size=20, color=RED).next_to(
             error_legend, RIGHT, buff=0.1
         )
 
         steering_legend = Line([0, 0, 0], [0.5, 0, 0], color=BLUE, stroke_width=2)
-        steering_label = Text("Steering", font_size=20, color=BLUE).next_to(
+        steering_label = TexText("Steering", font_size=20, color=BLUE).next_to(
             steering_legend, RIGHT, buff=0.1
         )
 
@@ -269,4 +276,70 @@ class Lab1(Slide):
             FadeOut(error_label),
             FadeOut(steering_legend),
             FadeOut(steering_label),
+        )
+
+        # Implementing PID
+        implement_pid_title = TexText("Implementing PID")
+        self.play(Write(implement_pid_title))
+        self.play(FadeOut(implement_pid_title))
+
+        pid_equation = Tex(
+            r"u(t) = K_p e(t) + K_i \int_0^t e(\tau) d\tau + K_d \frac{de(t)}{dt}"
+        ).scale(0.8)
+        self.play(Write(pid_equation))
+
+        pid_equation_colored = (
+            Tex(
+                r"u(t) = ",
+                r" K_p ",
+                r" e(t) ",
+                r" + ",
+                r" K_i ",
+                r" \int_0^t e(\tau) d\tau ",
+                r" + ",
+                r" K_d ",
+                r" \frac{de(t)}{dt}",
+            )
+            .scale(0.8)
+            .set_color_by_tex_to_color_map(
+                {
+                    r"e(t)": GREEN,
+                    r"\int_0^t e(\tau) d\tau": RED,
+                    r"\frac{de(t)}{dt}": BLUE,
+                }
+            )
+        )
+        p_legend = Line([0, 0, 0], [0.5, 0, 0], color=GREEN, stroke_width=3)
+        p_label = TexText("Proportional", font_size=20, color=GREEN).next_to(
+            p_legend, RIGHT, buff=0.1
+        )
+
+        i_legend = Line([0, 0, 0], [0.5, 0, 0], color=RED, stroke_width=3)
+        i_label = TexText("Integral", font_size=20, color=RED).next_to(
+            i_legend, RIGHT, buff=0.1
+        )
+
+        d_legend = Line([0, 0, 0], [0.5, 0, 0], color=BLUE, stroke_width=3)
+        d_label = TexText("Derivative", font_size=20, color=BLUE).next_to(
+            d_legend, RIGHT, buff=0.1
+        )
+
+        pid_legend_group = (
+            VGroup(
+                VGroup(p_legend, p_label),
+                VGroup(i_legend, i_label),
+                VGroup(d_legend, d_label),
+            )
+            .arrange(DOWN, aligned_edge=LEFT)
+            .to_corner(UR, buff=0.5)
+        )
+
+        self.play(
+            Write(pid_legend_group),
+            TransformMatchingTex(pid_equation, pid_equation_colored),
+        )
+
+        self.play(
+            FadeOut(pid_legend_group),
+            FadeOut(pid_equation_colored),
         )
