@@ -389,10 +389,11 @@ class Lab1(Slide):
 
         num_rays = 36
         angle_range = 270 * DEGREES
-        start_angle = -30 * DEGREES
+        start_angle = -20 * DEGREES
         car = (
             ImageMobject("labs/lab1/car_topview.png")
             .rotate(PI / 2 + PI / 4 + start_angle)
+            .shift(DOWN * 2)
             .scale(0.2)
         )
         wall = Line(RIGHT * 2 + UP * 4, RIGHT * 2 + DOWN * 4, stroke_width=6)
@@ -400,14 +401,16 @@ class Lab1(Slide):
         rays_to_keep = []
         for i in range(num_rays + 1):
             angle = start_angle + (angle_range / num_rays) * i
-            ray = Line(ORIGIN, [10 * np.cos(angle), 10 * np.sin(angle), 0]).set_color(
-                RED
-            )
+            ray = Line(
+                car.get_center(),
+                car.get_center() + [10 * np.cos(angle), 10 * np.sin(angle), 0],
+            ).set_color(RED)
             if ray.get_end()[0] > 2:
-                ray.set_points_by_ends(
-                    ORIGIN, [2, ray.get_end()[1] * 2 / ray.get_end()[0], 0]
+                scale_factor = min(2 / (np.abs(np.cos(angle)) * 10), 1.0)
+                new_end = (
+                    car.get_center() + (ray.get_end() - car.get_center()) * scale_factor
                 )
-            print(angle / DEGREES)
+                ray.put_start_and_end_on(car.get_center(), new_end)
             if (
                 angle == start_angle + 45 * DEGREES
                 or angle == start_angle + 90 * DEGREES
@@ -415,24 +418,62 @@ class Lab1(Slide):
                 rays_to_keep.append(ray)
             rays.append(ray)
         self.play(Write(wall), FadeIn(car))
-        self.play(*[GrowFromPoint(ray, ORIGIN) for ray in rays])
+        self.play(*[GrowFromPoint(ray, car.get_center()) for ray in rays])
         self.play(*[FadeOut(ray) for ray in rays if ray not in rays_to_keep])
 
-        a_label = Tex("a").next_to(rays_to_keep[1].get_center(), UP + LEFT, buff=0.1)
-        b_label = Tex("b").next_to(
-            rays_to_keep[0].get_center(), UP * 2 + RIGHT * 2, buff=0.1
-        )
+        a = rays_to_keep[1]
+        b = rays_to_keep[0]
+        a_label = Tex("a").next_to(a.get_center(), UP + LEFT, buff=0.1)
+        b_label = Tex("b").next_to(b.get_center(), UP * 2 + RIGHT * 2, buff=0.1)
         theta_arc = Arc(
             start_angle=start_angle + 45 * DEGREES,
             angle=45 * DEGREES,
             radius=0.5,
-            arc_center=ORIGIN,
+            arc_center=car.get_center(),
         )
         theta_label = Tex(r"\theta").next_to(
-            theta_arc.get_center(), UP + 2 * RIGHT, buff=0.1
+            theta_arc.get_center(), UP + RIGHT, buff=0.1
         )
         self.play(Write(theta_arc), Write(theta_label))
         self.play(
             Write(a_label),
             Write(b_label),
         )
+
+        drop = get_closest_point_on_line(
+            b.get_start(), b.get_end() * 3 - 2 * car.get_center(), a.get_end()
+        )
+        drop_line = Line(a.get_end(), drop).set_color(YELLOW)
+        drop_line2 = Line(b.get_end(), drop).set_color(YELLOW)
+        self.play(
+            GrowFromPoint(drop_line, a.get_end()),
+            GrowFromPoint(drop_line2, b.get_end()),
+        )
+
+        alpha_arc = Arc(
+            start_angle=-90 * DEGREES,
+            angle=start_angle + 45 * DEGREES,
+            radius=1.0,
+            arc_center=a.get_end(),
+        )
+        alpha_label = Tex(r"\alpha").next_to(
+            alpha_arc.get_center(), DOWN * 4 + RIGHT * 0.2, buff=0.1
+        )
+        self.play(Write(alpha_arc), Write(alpha_label))
+
+        drop = get_closest_point_on_line(
+            wall.get_start(), wall.get_end(), car.get_center()
+        )
+        drop_line = Line(car.get_center(), drop).set_color(YELLOW)
+        self.play(GrowFromPoint(drop_line, car.get_center()))
+
+        alpha_arc_2 = Arc(
+            start_angle=0 * DEGREES,
+            angle=start_angle + 45 * DEGREES,
+            radius=0.7,
+            arc_center=car.get_center(),
+        )
+        alpha_label_2 = Tex(r"\alpha").next_to(
+            alpha_arc_2.get_center(), UP * 0.2 + RIGHT * 4, buff=0.1
+        )
+        self.play(Write(alpha_arc_2), Write(alpha_label_2))
