@@ -124,7 +124,6 @@ def create_plotting_updater(
 
 class Lab1(Slide):
     def construct(self):
-        # Title
         title = TexText("F1tenth Lab 1:", font_size=100).shift(1 * UP)
         title2 = TexText("Wall Following")
 
@@ -132,15 +131,13 @@ class Lab1(Slide):
         self.play(Write(title2))
         self.play(FadeOut(title), FadeOut(title2))
 
-        # Outline
         outline_title = TexText("Outline:", font_size=100).shift(UP * 2)
         outline = (
             VGroup(
                 TexText("1. What is PID?"),
                 TexText("2. Implementing PID"),
-                TexText("3. Tuning PID"),
-                TexText("4. Geometric analysis of wall following"),
-                TexText("5. Wall following!"),
+                TexText("3. Geometric analysis of wall following"),
+                TexText("4. Wall following!"),
             )
             .arrange(DOWN, aligned_edge=LEFT)
             .shift(DOWN)
@@ -149,7 +146,6 @@ class Lab1(Slide):
         self.play(Write(outline))
         self.play(FadeOut(outline_title), FadeOut(outline))
 
-        # What is PID?
         what_is_pid_title = TexText("What is PID?")
         self.play(Write(what_is_pid_title))
 
@@ -181,7 +177,6 @@ class Lab1(Slide):
         self.wait_until(lambda: follow_path not in car.updaters)
         self.play(FadeOut(car), FadeOut(what_is_pid_title))
 
-        # Pid equation
         error_text = Tex(r"\text{Error}").set_color(RED).shift(LEFT * 4)
         pid_box = Rectangle(width=2, height=1).shift(ORIGIN)
         pid_text = Tex(r"\text{PID}").move_to(pid_box.get_center())
@@ -220,7 +215,6 @@ class Lab1(Slide):
         self.play(TransformMatchingTex(error_text, error_eq))
         self.play(FadeOut(error_eq))
 
-        # go back to look at animation with plots for error and steering
         what_is_pid_title = TexText("Another look at pid")
         self.play(Write(what_is_pid_title))
 
@@ -277,7 +271,6 @@ class Lab1(Slide):
             FadeOut(legend_group),
         )
 
-        # Implementing PID
         implement_pid_title = TexText("Implementing PID")
         self.play(Write(implement_pid_title))
         self.play(FadeOut(implement_pid_title))
@@ -321,8 +314,7 @@ class Lab1(Slide):
             FadeOut(pid_equation_colored),
         )
 
-        # go back to look at animation with plots for PID error and steering
-        what_is_pid_title = TexText("Another another look at pid")
+        what_is_pid_title = TexText("Breakdown of PID")
         self.play(Write(what_is_pid_title))
 
         line_y = -3
@@ -374,11 +366,10 @@ class Lab1(Slide):
             segments=segments,
             scene=self,
             plot_data={
-                "error": [[0, 0, 0]],
-                "steering": [[0, 0, 0]],
-                "proportional": [[0, 0, 0]],
-                "integral": [[0, 0, 0]],
-                "derivative": [[0, 0, 0]],
+                "error": [],
+                "proportional": [],
+                "integral": [],
+                "derivative": [],
             },
         )
         car.add_updater(follow_path)
@@ -389,4 +380,59 @@ class Lab1(Slide):
             FadeOut(axes),
             *[FadeOut(segment) for segment in segments],
             FadeOut(legend_group),
+        )
+
+        # Wall following!
+        wall_following_title = TexText("Wall following!")
+        self.play(Write(wall_following_title))
+        self.play(FadeOut(wall_following_title))
+
+        num_rays = 36
+        angle_range = 270 * DEGREES
+        start_angle = -30 * DEGREES
+        car = (
+            ImageMobject("labs/lab1/car_topview.png")
+            .rotate(PI / 2 + PI / 4 + start_angle)
+            .scale(0.2)
+        )
+        wall = Line(RIGHT * 2 + UP * 4, RIGHT * 2 + DOWN * 4, stroke_width=6)
+        rays = []
+        rays_to_keep = []
+        for i in range(num_rays + 1):
+            angle = start_angle + (angle_range / num_rays) * i
+            ray = Line(ORIGIN, [10 * np.cos(angle), 10 * np.sin(angle), 0]).set_color(
+                RED
+            )
+            if ray.get_end()[0] > 2:
+                ray.set_points_by_ends(
+                    ORIGIN, [2, ray.get_end()[1] * 2 / ray.get_end()[0], 0]
+                )
+            print(angle / DEGREES)
+            if (
+                angle == start_angle + 45 * DEGREES
+                or angle == start_angle + 90 * DEGREES
+            ):
+                rays_to_keep.append(ray)
+            rays.append(ray)
+        self.play(Write(wall), FadeIn(car))
+        self.play(*[GrowFromPoint(ray, ORIGIN) for ray in rays])
+        self.play(*[FadeOut(ray) for ray in rays if ray not in rays_to_keep])
+
+        a_label = Tex("a").next_to(rays_to_keep[1].get_center(), UP + LEFT, buff=0.1)
+        b_label = Tex("b").next_to(
+            rays_to_keep[0].get_center(), UP * 2 + RIGHT * 2, buff=0.1
+        )
+        theta_arc = Arc(
+            start_angle=start_angle + 45 * DEGREES,
+            angle=45 * DEGREES,
+            radius=0.5,
+            arc_center=ORIGIN,
+        )
+        theta_label = Tex(r"\theta").next_to(
+            theta_arc.get_center(), UP + 2 * RIGHT, buff=0.1
+        )
+        self.play(Write(theta_arc), Write(theta_label))
+        self.play(
+            Write(a_label),
+            Write(b_label),
         )
