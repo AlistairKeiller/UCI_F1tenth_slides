@@ -308,32 +308,14 @@ class Lab1(Slide):
                 }
             )
         )
-        p_legend = Line([0, 0, 0], [0.5, 0, 0], color=YELLOW, stroke_width=3)
-        p_label = TexText("Proportional", font_size=20).next_to(
-            p_legend, RIGHT, buff=0.1
-        )
-
-        i_legend = Line([0, 0, 0], [0.5, 0, 0], color=BLUE, stroke_width=3)
-        i_label = TexText("Integral", font_size=20).next_to(i_legend, RIGHT, buff=0.1)
-
-        d_legend = Line([0, 0, 0], [0.5, 0, 0], color=PURPLE, stroke_width=3)
-        d_label = TexText("Derivative", font_size=20).next_to(d_legend, RIGHT, buff=0.1)
-
-        pid_legend_group = (
-            VGroup(
-                VGroup(p_legend, p_label),
-                VGroup(i_legend, i_label),
-                VGroup(d_legend, d_label),
-            )
-            .arrange(DOWN, aligned_edge=LEFT)
-            .to_corner(UR, buff=0.5)
+        pid_legend_group = create_legend(
+            [("Proportional", YELLOW), ("Integral", BLUE), ("Derivative", PURPLE)]
         )
 
         self.play(
             Write(pid_legend_group),
             TransformMatchingTex(pid_equation, pid_equation_colored),
         )
-
         self.play(
             FadeOut(pid_legend_group),
             FadeOut(pid_equation_colored),
@@ -343,158 +325,68 @@ class Lab1(Slide):
         what_is_pid_title = TexText("Another another look at pid")
         self.play(Write(what_is_pid_title))
 
-        line_start = [-5, -3, 0]
-        line_length = 10
-        pid = PID(kp=2.0, ki=0.1, kd=2.0, setpoint=0.0, out_limits=(-2.0, 2.0))
-        speed = ValueTracker(0)
-        max_speed = 1.5
-        acceleration = 2
-        heading = ValueTracker(PI / 4)
-        line = Line(line_start, line_start + RIGHT * line_length)
-
-        self.play(Transform(what_is_pid_title, line))
-
+        line_y = -3
+        line_start_x = -5
+        line_end_x = 5
+        heading = PI / 4
+        line = Line(
+            line_start_x * RIGHT + line_y * UP, line_end_x * RIGHT + line_y * UP
+        )
         axes = Axes(
             x_range=(0, 8),
             y_range=(-2, 2, 0.5),
             height=6,
             width=10,
         ).shift(UP * 0.5)
-
         axes.add_coordinate_labels(
             font_size=20,
             num_decimal_places=1,
         )
-
-        error_legend = Line([0, 0, 0], [0.5, 0, 0], color=RED, stroke_width=2)
-        error_label = TexText("Error", font_size=20, color=RED).next_to(
-            error_legend, RIGHT, buff=0.1
+        legend_group = create_legend(
+            [
+                ("Error", RED),
+                ("Proportional", YELLOW),
+                ("Integral", BLUE),
+                ("Derivative", PURPLE),
+            ]
         )
-
-        p_legend = Line([0, 0, 0], [0.5, 0, 0], color=YELLOW, stroke_width=3)
-        p_label = TexText("Proportional", font_size=20).next_to(
-            p_legend, RIGHT, buff=0.1
-        )
-
-        i_legend = Line([0, 0, 0], [0.5, 0, 0], color=BLUE, stroke_width=3)
-        i_label = TexText("Integral", font_size=20).next_to(i_legend, RIGHT, buff=0.1)
-
-        d_legend = Line([0, 0, 0], [0.5, 0, 0], color=PURPLE, stroke_width=3)
-        d_label = TexText("Derivative", font_size=20).next_to(d_legend, RIGHT, buff=0.1)
-
-        legend_group = (
-            VGroup(
-                VGroup(error_legend, error_label),
-                VGroup(p_legend, p_label),
-                VGroup(i_legend, i_label),
-                VGroup(d_legend, d_label),
-            )
-            .arrange(DOWN, aligned_edge=LEFT)
-            .to_corner(UR, buff=0.5)
-        )
-
-        self.play(Write(axes))
-        self.play(Write(legend_group))
-
-        time_tracker = ValueTracker(0)
-        error_points = []
-        error_segments = []
-        proportional_points = []
-        proportional_segments = []
-        integral_points = []
-        integral_segments = []
-        derivative_points = []
-        derivative_segments = []
-
         car = (
             ImageMobject("labs/lab1/car_topview.png")
             .scale(0.07)
-            .shift(line_start)
-            .rotate(heading.get_value())
+            .shift(line_start_x * RIGHT + line_y * UP)
+            .rotate(heading)
         )
+        segments = []
 
+        self.play(Transform(what_is_pid_title, line))
+        self.play(Write(axes))
+        self.play(Write(legend_group))
         self.play(FadeIn(car))
 
-        def follow_path(mob, dt):
-            if not dt or dt <= 0:
-                return
-            x, y, _ = mob.get_center()
-
-            e = y - line_start[1]
-            omega, p, i, d = pid.update(e, dt)
-
-            time_tracker.set_value(time_tracker.get_value() + dt)
-            error_points.append([time_tracker.get_value(), e, 0])
-            proportional_points.append([time_tracker.get_value(), p, 0])
-            integral_points.append([time_tracker.get_value(), i, 0])
-            derivative_points.append([time_tracker.get_value(), d, 0])
-
-            if len(error_points) > 1:
-                error_segment = Line(
-                    axes.coords_to_point(*error_points[-2][:2]),
-                    axes.coords_to_point(*error_points[-1][:2]),
-                    color=RED,
-                    stroke_width=2,
-                )
-                proportional_segment = Line(
-                    axes.coords_to_point(*proportional_points[-2][:2]),
-                    axes.coords_to_point(*proportional_points[-1][:2]),
-                    color=YELLOW,
-                    stroke_width=2,
-                )
-                integral_segment = Line(
-                    axes.coords_to_point(*integral_points[-2][:2]),
-                    axes.coords_to_point(*integral_points[-1][:2]),
-                    color=BLUE,
-                    stroke_width=2,
-                )
-                derivative_segment = Line(
-                    axes.coords_to_point(*derivative_points[-2][:2]),
-                    axes.coords_to_point(*derivative_points[-1][:2]),
-                    color=PURPLE,
-                    stroke_width=2,
-                )
-                error_segments.append(error_segment)
-                proportional_segments.append(proportional_segment)
-                integral_segments.append(integral_segment)
-                derivative_segments.append(derivative_segment)
-                self.add(
-                    error_segment,
-                    proportional_segment,
-                    integral_segment,
-                    derivative_segment,
-                )
-
-            new_theta = heading.get_value() + omega * dt
-            mob.rotate(new_theta - heading.get_value())
-            heading.set_value(new_theta)
-
-            if x < line_start[0] + line_length:
-                speed.set_value(min(speed.get_value() + acceleration * dt, max_speed))
-            else:
-                speed.set_value(max(speed.get_value() - acceleration * dt, 0))
-            if speed.get_value() <= 0:
-                mob.remove_updater(follow_path)
-            dx = speed.get_value() * np.cos(new_theta) * dt
-            dy = speed.get_value() * np.sin(new_theta) * dt
-            mob.move_to([x + dx, y + dy, 0])
-
+        follow_path = create_plotting_updater(
+            pid=PID(kp=2.0, ki=0.1, kd=2.0, setpoint=0.0, out_limits=(-2.0, 2.0)),
+            heading=heading,
+            acceleration=2,
+            max_speed=1.5,
+            line_y=line_y,
+            line_end_x=line_end_x,
+            axes=axes,
+            segments=segments,
+            scene=self,
+            plot_data={
+                "error": [[0, 0, 0]],
+                "steering": [[0, 0, 0]],
+                "proportional": [[0, 0, 0]],
+                "integral": [[0, 0, 0]],
+                "derivative": [[0, 0, 0]],
+            },
+        )
         car.add_updater(follow_path)
         self.wait_until(lambda: follow_path not in car.updaters)
         self.play(
             FadeOut(car),
             FadeOut(what_is_pid_title),
             FadeOut(axes),
-            *[FadeOut(segment) for segment in error_segments],
-            *[FadeOut(segment) for segment in proportional_segments],
-            *[FadeOut(segment) for segment in integral_segments],
-            *[FadeOut(segment) for segment in derivative_segments],
-            FadeOut(error_legend),
-            FadeOut(error_label),
-            FadeOut(p_legend),
-            FadeOut(p_label),
-            FadeOut(i_legend),
-            FadeOut(i_label),
-            FadeOut(d_legend),
-            FadeOut(d_label),
+            *[FadeOut(segment) for segment in segments],
+            FadeOut(legend_group),
         )
