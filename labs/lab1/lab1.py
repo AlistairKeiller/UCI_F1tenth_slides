@@ -88,7 +88,7 @@ def create_plotting_updater(
 
         current_time = time_tracker.get_value()
         if plot_data is not None and axes is not None and segments is not None:
-            for key, color, value in zip(data, [e, omega, p, i, d]):
+            for (key, color), value in zip(data, [e, omega, p, i, d]):
                 if key in plot_data and len(plot_data[key]) > 1:
                     plot_data[key].append([current_time, value, 0])
                     segment = Line(
