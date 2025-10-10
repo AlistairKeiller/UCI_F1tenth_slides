@@ -421,18 +421,26 @@ class Lab1(Slide):
         self.play(*[GrowFromPoint(ray, car.get_center()) for ray in rays])
         self.play(*[FadeOut(ray) for ray in rays if ray not in rays_to_keep])
 
-        a = rays_to_keep[1]
-        b = rays_to_keep[0]
-        a_label = Tex("a").next_to(a.get_center(), UP + LEFT, buff=0.1)
-        b_label = Tex("b").next_to(b.get_center(), UP * 2 + RIGHT * 2, buff=0.1)
+        line_a = rays_to_keep[1]
+        line_b = rays_to_keep[0]
+        a_label = (
+            Tex("a").next_to(line_a.get_center(), UP + LEFT, buff=0.1).set_color(TEAL)
+        )
+        b_label = (
+            Tex("b")
+            .next_to(line_b.get_center(), UP * 2 + RIGHT * 2, buff=0.1)
+            .set_color(YELLOW)
+        )
         theta_arc = Arc(
             start_angle=start_angle + 45 * DEGREES,
             angle=45 * DEGREES,
             radius=0.5,
             arc_center=car.get_center(),
         )
-        theta_label = Tex(r"\theta").next_to(
-            theta_arc.get_center(), UP + RIGHT, buff=0.1
+        theta_label = (
+            Tex(r"\theta")
+            .next_to(theta_arc.get_center(), UP + RIGHT, buff=0.1)
+            .set_color(GOLD)
         )
         self.play(Write(theta_arc), Write(theta_label))
         self.play(
@@ -441,31 +449,35 @@ class Lab1(Slide):
         )
 
         drop = get_closest_point_on_line(
-            b.get_start(), b.get_end() * 3 - 2 * car.get_center(), a.get_end()
+            line_b.get_start(),
+            line_b.get_end() * 3 - 2 * car.get_center(),
+            line_a.get_end(),
         )
-        drop_line = Line(a.get_end(), drop).set_color(YELLOW)
-        drop_line2 = Line(b.get_end(), drop).set_color(YELLOW)
+        drop_line = Line(line_a.get_end(), drop).set_color(MAROON)
+        drop_line2 = Line(line_b.get_end(), drop).set_color(MAROON)
         self.play(
-            GrowFromPoint(drop_line, a.get_end()),
-            GrowFromPoint(drop_line2, b.get_end()),
+            GrowFromPoint(drop_line, line_a.get_end()),
+            GrowFromPoint(drop_line2, line_b.get_end()),
         )
 
         alpha_arc = Arc(
             start_angle=-90 * DEGREES,
             angle=start_angle + 45 * DEGREES,
             radius=1.0,
-            arc_center=a.get_end(),
+            arc_center=line_a.get_end(),
         )
-        alpha_label = Tex(r"\alpha").next_to(
-            alpha_arc.get_center(), DOWN * 4 + RIGHT * 0.2, buff=0.1
+        alpha_label = (
+            Tex(r"\alpha")
+            .next_to(alpha_arc.get_center(), DOWN * 4 + RIGHT * 0.2, buff=0.1)
+            .set_color(BLUE)
         )
         self.play(Write(alpha_arc), Write(alpha_label))
 
-        drop = get_closest_point_on_line(
+        drop_2 = get_closest_point_on_line(
             wall.get_start(), wall.get_end(), car.get_center()
         )
-        drop_line = Line(car.get_center(), drop).set_color(YELLOW)
-        self.play(GrowFromPoint(drop_line, car.get_center()))
+        drop_line3 = Line(car.get_center(), drop_2).set_color(MAROON)
+        self.play(GrowFromPoint(drop_line3, car.get_center()))
 
         alpha_arc_2 = Arc(
             start_angle=0 * DEGREES,
@@ -473,7 +485,121 @@ class Lab1(Slide):
             radius=0.7,
             arc_center=car.get_center(),
         )
-        alpha_label_2 = Tex(r"\alpha").next_to(
-            alpha_arc_2.get_center(), UP * 0.2 + RIGHT * 4, buff=0.1
+        alpha_label_2 = (
+            Tex(r"\alpha")
+            .next_to(alpha_arc_2.get_center(), UP * 0.2 + RIGHT * 4, buff=0.1)
+            .set_color(BLUE)
         )
         self.play(Write(alpha_arc_2), Write(alpha_label_2))
+
+        label_D = (
+            TexText("D")
+            .next_to(drop_line3.get_center(), DOWN, buff=0.1)
+            .set_color(GREEN)
+        )
+        self.play(Write(label_D))
+
+        equation = (
+            Tex("D", " = ", "b", r"\cos(\alpha)")
+            .shift(LEFT * 4)
+            .set_color_by_tex_to_color_map(
+                {
+                    "D": GREEN,
+                    "b": YELLOW,
+                    r"\alpha": BLUE,
+                }
+            )
+        )
+        self.play(Write(equation))
+        self.play(
+            FadeOut(label_D),
+            FadeOut(drop_line3),
+            FadeOut(alpha_arc_2),
+            FadeOut(alpha_label_2),
+        )
+
+        brace = Brace(
+            VGroup(drop_line2, line_b),
+            direction=np.array(
+                [
+                    -np.sin(start_angle + 45 * DEGREES + PI),
+                    np.cos(start_angle + 45 * DEGREES + PI),
+                    0,
+                ]
+            ),
+        )
+        brace_text = (
+            Tex("a", r"\cos(\theta)")
+            .next_to(brace.get_center(), DOWN + RIGHT, buff=0.1)
+            .set_color_by_tex_to_color_map({r"a": TEAL, r"\theta": YELLOW})
+        )
+        brace_group = VGroup(brace, brace_text)
+        self.play(TransformFromCopy(line_a, brace_group))
+
+        brace2 = Brace(
+            drop_line2,
+            direction=np.array(
+                [
+                    -np.sin(start_angle + 45 * DEGREES + PI),
+                    np.cos(start_angle + 45 * DEGREES + PI),
+                    0,
+                ]
+            ),
+        )
+        brace_text2 = (
+            Tex(r"a", r"\cos(\theta)-", "b")
+            .next_to(brace2.get_center(), DOWN + RIGHT, buff=0.1)
+            .set_color_by_tex_to_color_map({r"a": TEAL, r"b": YELLOW, r"\theta": GOLD})
+        )
+        brace_group2 = VGroup(brace2, brace_text2)
+        self.play(TransformMatchingShapes(brace_group, brace_group2))
+
+        brace3 = Brace(
+            drop_line,
+            direction=np.array(
+                [
+                    np.sin(start_angle + 45 * DEGREES + PI / 2),
+                    -np.cos(start_angle + 45 * DEGREES + PI / 2),
+                    0,
+                ]
+            ),
+        )
+        brace_text3 = (
+            Tex("a", r"\sin(\theta)")
+            .next_to(brace3.get_center(), UP * 0.2 + RIGHT, buff=0.3)
+            .set_color_by_tex_to_color_map({r"a": TEAL, r"\theta": GOLD})
+        )
+        brace_group3 = VGroup(brace3, brace_text3)
+        self.play(TransformFromCopy(line_a, brace_group3))
+
+        alpha_equation = Tex(
+            r"\alpha",
+            " = ",
+            r"\arctan\left(\frac{a\cos(\theta) - b}{a\sin(\theta)}\right)",
+        ).next_to(equation, DOWN, buff=0.3)
+        alpha_equation[0].set_color(BLUE)
+        alpha_equation[9].set_color(TEAL)
+        alpha_equation[14].set_color(GOLD)
+        alpha_equation[17].set_color(YELLOW)
+        alpha_equation[19].set_color(TEAL)
+        alpha_equation[24].set_color(GOLD)
+        self.play(Write(alpha_equation))
+
+        self.play(
+            FadeOut(brace_group2),
+            FadeOut(brace_group3),
+            FadeOut(a_label),
+            FadeOut(b_label),
+            FadeOut(theta_arc),
+            FadeOut(theta_label),
+            FadeOut(drop_line),
+            FadeOut(drop_line2),
+            FadeOut(wall),
+            FadeOut(car),
+            FadeOut(alpha_equation),
+            FadeOut(equation),
+            FadeOut(line_a),
+            FadeOut(line_b),
+            FadeOut(alpha_arc),
+            FadeOut(alpha_label),
+        )
